@@ -1,0 +1,19 @@
+{
+	"uuid": "02b407ea-5b46-4051-977b-179d00b96c2b",
+	"shortName": "Battlife",
+	"longName": "Battery life",
+	"companyName": "qwqert",
+	"versionLabel": "1.0",
+	"sdkVersion": "3",
+	"targetPlatforms": ["aplite"],
+	"enableMultiJS": true,
+	"watchapp": {
+		"watchface": false
+	},
+	"appKeys": {
+		"dummy": 0
+	},
+	"resources": {
+		"media": []
+	}
+}
