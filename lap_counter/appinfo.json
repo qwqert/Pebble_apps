@@ -1,0 +1,19 @@
+{
+  "uuid": "e1d75082-cf40-4891-a444-1860aa87969d",
+  "shortName": "lap_counter",
+  "longName": "lap_counter",
+  "companyName": "MakeAwesomeHappen",
+  "versionLabel": "1.0",
+  "sdkVersion": "3",
+  "targetPlatforms": ["aplite", "basalt", "chalk"],
+  "enableMultiJS": true,
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": []
+  }
+}
