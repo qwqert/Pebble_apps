@@ -1,8 +1,8 @@
 
 #include <pebble.h>
 
-#define LIST_HEADER_HEIGHT 18
-#define LIST_MAX_ROWS      20
+#define LIST_HEADER_HEIGHT         18
+#define LIST_MAX_ROWS              30
 #define LIST_CELL_TITLE_HEIGHT     28
 #define LIST_CELL_SUBTITLE_HEIGHT  16
 
@@ -99,6 +99,8 @@ static void main_window_load(Window *window)
     s_list_message_layer = text_layer_create(GRect(bounds.origin.x, bounds.origin.y,
                 bounds.size.w, LIST_HEADER_HEIGHT));
     text_layer_set_text_alignment(s_list_message_layer, GTextAlignmentCenter);
+    text_layer_set_text_color(s_list_message_layer, GColorWhite);
+    text_layer_set_background_color(s_list_message_layer, GColorBlack);
     layer_add_child(window_layer, text_layer_get_layer(s_list_message_layer));
 
     time_t now = time(NULL);
