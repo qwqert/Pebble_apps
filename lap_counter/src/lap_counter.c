@@ -11,7 +11,13 @@ static MenuLayer *s_menu_layer;
 static TextLayer *s_list_message_layer;
 
 static unsigned int s_num_rows = 0;
-static time_t times[LIST_MAX_ROWS];
+
+typedef struct {
+    time_t t_s;
+    uint16_t t_ms;
+} lap_time_t;
+
+static lap_time_t times[LIST_MAX_ROWS];
 
 static uint16_t get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *context) 
 {
@@ -20,25 +26,31 @@ static uint16_t get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_in
 
 static void draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *context) 
 {
-    static char s_title[] = "[00]  +00:00:00.000";
-    static char s_subtitle[] = " +00:00:00 / 00:00:00";
-    struct tm *tm_time = localtime(&times[cell_index->row]);
+    static char s_title[] = "[00]+00:00:00.000";
+    static char s_subtitle[] = "+00:00:00.000/00:00:00";
+    struct tm *tm_time = localtime(&times[cell_index->row].t_s);
 
     if (cell_index->row != 0) {
-        unsigned int sublast = (unsigned int)times[cell_index->row] - (unsigned int)times[cell_index->row - 1];
-        unsigned int subhead = (unsigned int)times[cell_index->row] - (unsigned int)times[0];
+        unsigned int sublast_ms = times[cell_index->row].t_ms + 1000 - times[cell_index->row - 1].t_ms;
+        unsigned int sublast_s = (unsigned int)times[cell_index->row].t_s -
+                                 (unsigned int)times[cell_index->row - 1].t_s - 
+                                 !(sublast_ms / 1000);
+        unsigned int subhead_ms = times[cell_index->row].t_ms + 1000 - times[0].t_ms;
+        unsigned int subhead_s = (unsigned int)times[cell_index->row].t_s - 
+                                 (unsigned int)times[0].t_s - !(subhead_ms / 1000);
 
-        snprintf(s_title, sizeof(s_title), "[%02d]  +%02d:%02d:%02d",
-                (int)cell_index->row, sublast / 3600, sublast % 3600 / 60, sublast % 3600 % 60);
+        snprintf(s_title, sizeof(s_title), "%02d +%02d:%02d:%02d.%03d",
+                cell_index->row, sublast_s / 3600, sublast_s % 3600 / 60,
+                sublast_s % 3600 % 60, sublast_ms % 1000);
 
-        snprintf(s_subtitle, sizeof(s_subtitle), " +%02d:%02d:%02d / %02d:%02d:%02d",
-                subhead / 3600, subhead % 3600 / 60, subhead % 3600 % 60,
+        snprintf(s_subtitle, sizeof(s_subtitle), "+%02d:%02d:%02d.%03d/%02d:%02d:%02d",
+                subhead_s / 3600, subhead_s % 3600 / 60, subhead_s % 3600 % 60, subhead_ms % 1000,
                 tm_time->tm_hour, tm_time->tm_min, tm_time->tm_sec);
 
         menu_cell_basic_draw(ctx, cell_layer, s_title, s_subtitle, NULL);
     }
     else {
-        snprintf(s_title, sizeof(s_title), "[GO]   %02d:%02d:%02d",
+        snprintf(s_title, sizeof(s_title), "[START] %02d:%02d:%02d",
                 tm_time->tm_hour, tm_time->tm_min, tm_time->tm_sec);
 
         menu_cell_basic_draw(ctx, cell_layer, s_title, NULL, NULL);
@@ -69,7 +81,8 @@ void select_long_click_callback(struct MenuLayer *menu_layer, MenuIndex *cell_in
 
 void select_click_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *context)
 {
-    times[s_num_rows] = time(NULL);
+    time_ms(&times[s_num_rows].t_s, &times[s_num_rows].t_ms);
+
     MenuIndex last_item = {
         .section = cell_index->section,
         .row = (s_num_rows >= LIST_MAX_ROWS)? LIST_MAX_ROWS : ++s_num_rows,
