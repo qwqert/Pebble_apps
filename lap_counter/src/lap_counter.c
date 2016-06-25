@@ -5,10 +5,13 @@
 #define LIST_MAX_ROWS              30
 #define LIST_CELL_TITLE_HEIGHT     28
 #define LIST_CELL_SUBTITLE_HEIGHT  16
+#define HELP_MESSAGE_HEIGHT        60
+#define HELP_MESSAGE_STRING        "Click SELECT to start, and long click SELECT to clear all records."
 
 static Window *s_main_window;
 static MenuLayer *s_menu_layer;
 static TextLayer *s_list_message_layer;
+static TextLayer *s_help_message_layer;
 
 static unsigned int s_num_rows = 0;
 
@@ -26,7 +29,7 @@ static uint16_t get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_in
 
 static void draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *context) 
 {
-    static char s_title[] = "[00]+00:00:00.000";
+    static char s_title[] = "[00]  +00:00.000";
     static char s_subtitle[] = "+00:00:00.000/00:00:00";
     struct tm *tm_time = localtime(&times[cell_index->row].t_s);
 
@@ -39,8 +42,8 @@ static void draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex 
         unsigned int subhead_s = (unsigned int)times[cell_index->row].t_s - 
                                  (unsigned int)times[0].t_s - !(subhead_ms / 1000);
 
-        snprintf(s_title, sizeof(s_title), "%02d +%02d:%02d:%02d.%03d",
-                cell_index->row, sublast_s / 3600, sublast_s % 3600 / 60,
+        snprintf(s_title, sizeof(s_title), "[%02d]  +%02d:%02d.%03d",
+                cell_index->row, sublast_s % 3600 / 60,
                 sublast_s % 3600 % 60, sublast_ms % 1000);
 
         snprintf(s_subtitle, sizeof(s_subtitle), "+%02d:%02d:%02d.%03d/%02d:%02d:%02d",
@@ -77,10 +80,12 @@ void select_long_click_callback(struct MenuLayer *menu_layer, MenuIndex *cell_in
 {
     s_num_rows = 0;
     layer_mark_dirty(menu_layer_get_layer(menu_layer));
+    layer_set_hidden(text_layer_get_layer(s_help_message_layer), false);
 }
 
 void select_click_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *context)
 {
+    layer_set_hidden(text_layer_get_layer(s_help_message_layer), true);
     time_ms(&times[s_num_rows].t_s, &times[s_num_rows].t_ms);
 
     MenuIndex last_item = {
@@ -115,6 +120,15 @@ static void main_window_load(Window *window)
     text_layer_set_text_color(s_list_message_layer, GColorWhite);
     text_layer_set_background_color(s_list_message_layer, GColorBlack);
     layer_add_child(window_layer, text_layer_get_layer(s_list_message_layer));
+
+    s_help_message_layer = text_layer_create(GRect(bounds.origin.x, 
+                bounds.size.h / 2 - HELP_MESSAGE_HEIGHT, 
+                bounds.size.w, HELP_MESSAGE_HEIGHT));
+    text_layer_set_text_alignment(s_help_message_layer, GTextAlignmentCenter);
+    text_layer_set_text_color(s_help_message_layer, GColorBlack);
+    text_layer_set_background_color(s_help_message_layer, GColorWhite);
+    text_layer_set_text(s_help_message_layer, HELP_MESSAGE_STRING);
+    layer_add_child(window_layer, text_layer_get_layer(s_help_message_layer));
 
     time_t now = time(NULL);
     struct tm *tick_time = localtime(&now);
